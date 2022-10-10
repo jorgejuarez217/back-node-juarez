@@ -3,7 +3,7 @@ const express = require('express')
 const path = require( 'path') 
 const bodyParser = require('body-parser');
 const cookieParser = require( "cookie-parser");
-const {configChat} = require ('./socket/chat.js')
+const {configChatMongo} = require ('./socket/chat.mongo.js')
 const logger = require('./utils/logger.js')
 const passport = require( 'passport');
 const yargs = require('yargs/yargs')(process.argv.slice(2)) //libreria YARGS
@@ -11,6 +11,10 @@ const initPassport = require( './passport/init.js');
 //IMPORTO ROUTERS  CL28
 const routes = require( "./routes/index.js");
 const rutas = require( "./routes/api.js");
+
+const RouterProducto = require ("./routes/producto.route.js")
+const productoRouter = new RouterProducto()
+
 const configSession = require( "./session/configSession.js");
 const { engine } = require('express-handlebars')
 const app = express()
@@ -53,12 +57,12 @@ if (args.modo =="cluster" && cluster.isPrimary) {
 
     cluster.fork();
   });
-} else {
+} else { 
 
   console.log("MODO FORK")
   app.use("/", routes);
   app.use('/api', rutas);
-  
+  app.use('/api/productos',productoRouter.start())///////
  
   expressServer = app.listen(process.env.PORT || 8080, (err) => {
       if(err) {
@@ -82,7 +86,7 @@ app.engine('hbs',
   
 app.set('view engine', 'hbs')
 app.set('views', path.join(__dirname, './public/views'))
-configChat(expressServer)
+configChatMongo(expressServer)
 
 app.use((req,res,next)=>{
   const { url, method } = req;
